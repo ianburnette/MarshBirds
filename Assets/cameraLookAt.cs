@@ -7,6 +7,10 @@ public class cameraLookAt : MonoBehaviour {
     public Transform rotationTarget;
     public float followDelay;
     public Transform gm;
+    public Transform forwardTarget, backwardTarget, targetOverride;
+    public bool overrideCameraTarget;
+    public PlayerMove movementScript;
+    public float movementMargin;
 
     void Start()
     {
@@ -15,7 +19,23 @@ public class cameraLookAt : MonoBehaviour {
         rotationTarget.parent = gm;
     }
 
+    void DetermineTarget()
+    {
+        if (!overrideCameraTarget)
+        {
+            if (movementScript.publicMovementVector.x > movementMargin)
+                target = forwardTarget;
+            else if (movementScript.publicMovementVector.x < -movementMargin)
+                target = backwardTarget;
+        }
+        else 
+        {
+            target = targetOverride;
+        }
+    }
+
 	void Update () {
+        DetermineTarget();
         if (followDelay <= 0)
             FollowImmediately();
         else

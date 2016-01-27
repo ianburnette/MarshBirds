@@ -49,7 +49,8 @@ public class PlayerMove : MonoBehaviour
 	private AudioSource aSource;
 
     //custom
-    public Transform movementReference;
+    public Transform movementReferenceForward, movementReferenceBackward, movementReferenceBase;
+    public Vector3 publicMovementVector;
 
 	//setup
 	void Awake()
@@ -114,16 +115,27 @@ public class PlayerMove : MonoBehaviour
             direction = (screenMovementForward * v) + (screenMovementRight * h);
         else
         {
-            Vector3 rawDirection = movementReference.position - transform.position;// - movementReference.position;
+            Vector3 rawDirection = Vector3.zero;
+            if (h > 0) //trying to move right
+            {
+                //rawDirection = movementReferenceForward.position - movementReferenceBase.position;
+                rawDirection = movementReferenceForward.position - transform.position;
+            }
+            else if (h < 0) //trying to move left
+            {
+                //rawDirection = movementReferenceBase.position - movementReferenceBackward.position;
+                rawDirection = transform.position - movementReferenceBackward.position;
+            }
+            // rawDirection = movementReferenceForward.position - movementReferenceBackward.position;// - movementReference.position;
             rawDirection.Normalize();
             direction = (rawDirection) * h;
-            print(rawDirection);
-
+            Debug.DrawRay(transform.position, rawDirection * 2f, Color.green);
         }
             //direction = Vector3.right * h;
         // direction = (screenMovementRight * h);
         //
         moveDirection = transform.position + direction;
+        publicMovementVector = direction;
 	}
 	
 	//apply correct player movement (fixedUpdate for physics calculations)
