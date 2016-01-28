@@ -14,13 +14,19 @@ public class PathNodeJumper : MonoBehaviour {
     public float playerPathPosition, forwardPathPosition, backwardPathPosition;
     public float movementSpeed;
 
-    public GameObject forwardCheckTransform, backwardCheckTransform, smoothedForwardGO, smoothedBackwardGO;
+    public GameObject forwardCheckTransform, backwardCheckTransform, smoothedForwardGO, smoothedBackwardGO, movementReferenceSmoothed;
     public float movementVector, checkTime, checkMargin, smootheTime, movementMult;
     public Rigidbody rb;
     public float transformSmoothingTime;
+    public float pathProximityMargin;
+    public int solverTimer;
+
+    PathProximityResolver pathSolver;
 
     void Start () {
-        InvokeRepeating("UpdatePosition", 0, checkTime);
+        //  InvokeRepeating("UpdatePosition", 0, checkTime);
+        pathSolver = GetComponent<PathProximityResolver>();
+        InvokeRepeating("FindPositionOnPath", 0, checkTime);
     }
 	
     void ClampValues()
@@ -46,6 +52,12 @@ public class PathNodeJumper : MonoBehaviour {
         backwardPathPosition = playerPathPosition - distanceMargin;
         Mathf.Clamp(forwardPathPosition, 0f, 1f);
         Mathf.Clamp(backwardPathPosition, 0f, 1f);
+    }
+
+    void FindPositionOnPath()
+    {
+        float desiredPathLocation = PathProximityResolver.RecursiveBinarySearch(player.position, iTweenPath.GetPath(pathName), playerPathPosition - pathProximityMargin, playerPathPosition + pathProximityMargin, solverTimer);
+        playerPathPosition = Mathf.Lerp(playerPathPosition, desiredPathLocation, smootheTime * Time.deltaTime);
     }
 
     void UpdatePosition()
@@ -91,6 +103,7 @@ public class PathNodeJumper : MonoBehaviour {
 
     void SetSmoothedTransforms()
     {
+        movementReferenceSmoothed.transform.position = Vector3.Lerp(movementReferenceSmoothed.transform.position, transform.position, transformSmoothingTime * Time.deltaTime);
         smoothedForwardGO.transform.position = Vector3.Lerp(smoothedForwardGO.transform.position, forwardCheckTransform.transform.position, transformSmoothingTime * Time.deltaTime);
         smoothedBackwardGO.transform.position = Vector3.Lerp(smoothedBackwardGO.transform.position, backwardCheckTransform.transform.position, transformSmoothingTime * Time.deltaTime);
     }

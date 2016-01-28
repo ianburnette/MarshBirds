@@ -119,15 +119,19 @@ public class PlayerMove : MonoBehaviour
             if (h > 0) //trying to move right
             {
                 //rawDirection = movementReferenceForward.position - movementReferenceBase.position;
-                rawDirection = movementReferenceForward.position - transform.position;
+                rawDirection = movementReferenceForward.position - new Vector3(transform.position.x, movementReferenceBase.position.y, transform.position.z);
+               // rawDirection = movementReferenceForward.position - transform.position;
             }
             else if (h < 0) //trying to move left
             {
                 //rawDirection = movementReferenceBase.position - movementReferenceBackward.position;
-                rawDirection = transform.position - movementReferenceBackward.position;
+                rawDirection = new Vector3(transform.position.x, movementReferenceBase.position.y, transform.position.z) - movementReferenceBackward.position;
+                //rawDirection = transform.position - movementReferenceBackward.position;
             }
             // rawDirection = movementReferenceForward.position - movementReferenceBackward.position;// - movementReference.position;
+            
             rawDirection.Normalize();
+            
             direction = (rawDirection) * h;
             Debug.DrawRay(transform.position, rawDirection * 2f, Color.green);
         }
