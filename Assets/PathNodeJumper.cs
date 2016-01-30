@@ -2,21 +2,16 @@
 using UnityEngine.UI;
 using System.Collections;
 
+[RequireComponent(typeof(PathProximityResolver))]
 public class PathNodeJumper : MonoBehaviour {
 
-    public Text debugText;
-    public Transform player;
+    public Transform objectToSet;
     public string pathName;
-    public int currentPathIndex;
-    public PlayerMove movementScript;
     public float distanceMargin;
     [Range(0f, 1f)]
-    public float playerPathPosition, forwardPathPosition, backwardPathPosition;
-    public float movementSpeed;
-
+    public float objectPathPosition, forwardPathPosition, backwardPathPosition;
     public GameObject forwardCheckTransform, backwardCheckTransform, smoothedForwardGO, smoothedBackwardGO, movementReferenceSmoothed;
-    public float movementVector, checkTime, checkMargin, smootheTime, movementMult;
-    public Rigidbody rb;
+    public float checkTime, smootheTime;
     public float transformSmoothingTime;
     public float pathProximityMargin;
     public int solverTimer;
@@ -24,98 +19,56 @@ public class PathNodeJumper : MonoBehaviour {
     PathProximityResolver pathSolver;
 
     void Start () {
-        //  InvokeRepeating("UpdatePosition", 0, checkTime);
         pathSolver = GetComponent<PathProximityResolver>();
         InvokeRepeating("FindPositionOnPath", 0, checkTime);
     }
-	
+
+    void Update()
+    {
+        CalculateSurroundingValues();
+        ClampValues();
+        SetTransformToPath(gameObject, objectPathPosition);
+        SetTransformToPath(forwardCheckTransform, forwardPathPosition);
+        SetTransformToPath(backwardCheckTransform, backwardPathPosition);
+        SetSmoothedTransforms(movementReferenceSmoothed.transform, transform);
+        SetSmoothedTransforms(smoothedForwardGO.transform, forwardCheckTransform.transform);
+        SetSmoothedTransforms(smoothedBackwardGO.transform, backwardCheckTransform.transform);
+        DebugRay();
+    }
+
+    void DebugRay()
+    {
+        Debug.DrawRay(transform.position, Vector3.down * 100, Color.yellow);
+    }
+
     void ClampValues()
     {
-        Mathf.Clamp(playerPathPosition, 0f, 1f);
+        Mathf.Clamp(objectPathPosition, 0f, 1f);
+        Mathf.Clamp(forwardPathPosition, 0f, 1f);
+        Mathf.Clamp(backwardPathPosition, 0f, 1f);
     }
 
-    void SetTransformToPath()
+    void SetTransformToPath(GameObject toSet, float position)
     {
-        
-        iTween.PutOnPath(gameObject, iTweenPath.GetPath(pathName), playerPathPosition);
+        iTween.PutOnPath(toSet, iTweenPath.GetPath(pathName), position);
     }
 
-    void SetSubTransforms()
+    void SetSmoothedTransforms(Transform toMove, Transform reference)
     {
-        iTween.PutOnPath(forwardCheckTransform, iTweenPath.GetPath(pathName), forwardPathPosition);
-        iTween.PutOnPath(backwardCheckTransform, iTweenPath.GetPath(pathName), backwardPathPosition);
+        toMove.transform.position = Vector3.Lerp(toMove.transform.position, reference.transform.position, transformSmoothingTime * Time.deltaTime);
     }
 
     void CalculateSurroundingValues()
     {
-        forwardPathPosition = playerPathPosition + distanceMargin;
-        backwardPathPosition = playerPathPosition - distanceMargin;
+        forwardPathPosition = objectPathPosition + distanceMargin;
+        backwardPathPosition = objectPathPosition - distanceMargin;
         Mathf.Clamp(forwardPathPosition, 0f, 1f);
         Mathf.Clamp(backwardPathPosition, 0f, 1f);
     }
 
     void FindPositionOnPath()
     {
-        float desiredPathLocation = PathProximityResolver.RecursiveBinarySearch(player.position, iTweenPath.GetPath(pathName), playerPathPosition - pathProximityMargin, playerPathPosition + pathProximityMargin, solverTimer);
-        playerPathPosition = Mathf.Lerp(playerPathPosition, desiredPathLocation, smootheTime * Time.deltaTime);
-    }
-
-    void UpdatePosition()
-    {
-        float desiredPathLocation = 0f;
-        if (1==1)// if (movementVector != 0f) //if I'm moving
-        {
-          //  debugText.text = "";
-         //   debugText.text += "I'm moving!";
-            float distToForward = Vector3.Distance(player.position, forwardCheckTransform.transform.position); //find player's distance to forward transform
-            float distToBackward = Vector3.Distance(player.position, backwardCheckTransform.transform.position); // find player's distance to backward tranform
-         //   debugText.text += "dist forward is " + distToForward + " and dist back is " + distToBackward;
-        //    debugText.text += "margin is " + (Mathf.Abs(distToForward) - Mathf.Abs(distToBackward));
-            if (Mathf.Abs(Mathf.Abs(distToForward) - Mathf.Abs(distToBackward)) > checkMargin) // if the distances aren't almost the same
-            {
-        //        debugText.text += " That's more than the margin!";
-
-                if (distToForward < distToBackward)
-                {//if I'm closer to forward
-                    desiredPathLocation = playerPathPosition + movementSpeed; // move this transform up the path a little
-              //      debugText.text += " I'm closer to the forward one!";
-                }
-                else
-                {//I'm closer to the backward transform
-                //    debugText.text += " I'm closer to the backward one!";
-                    desiredPathLocation = playerPathPosition - movementSpeed; // move this transform down the path a little
-                }
-                playerPathPosition = Mathf.Lerp(playerPathPosition, desiredPathLocation, smootheTime * Time.deltaTime);
-            }
-        }
-        else
-        {
-          //  debugText.text = "";
-          //  debugText.text += "I'm stationary!";
-            
-        }
-    }
-
-    void FindPlayerVelocity()
-    {
-        movementSpeed = rb.velocity.magnitude  * movementMult * Time.deltaTime * Time.deltaTime;
-    }
-
-    void SetSmoothedTransforms()
-    {
-        movementReferenceSmoothed.transform.position = Vector3.Lerp(movementReferenceSmoothed.transform.position, transform.position, transformSmoothingTime * Time.deltaTime);
-        smoothedForwardGO.transform.position = Vector3.Lerp(smoothedForwardGO.transform.position, forwardCheckTransform.transform.position, transformSmoothingTime * Time.deltaTime);
-        smoothedBackwardGO.transform.position = Vector3.Lerp(smoothedBackwardGO.transform.position, backwardCheckTransform.transform.position, transformSmoothingTime * Time.deltaTime);
-    }
-
-    void Update () {
-
-        FindPlayerVelocity();
-        movementVector = movementScript.publicMovementVector.x;
-        CalculateSurroundingValues();
-        ClampValues();
-        SetTransformToPath();
-        SetSubTransforms();
-        SetSmoothedTransforms();
+        float desiredPathLocation = PathProximityResolver.RecursiveBinarySearch(objectToSet.position, iTweenPath.GetPath(pathName), objectPathPosition - pathProximityMargin, objectPathPosition + pathProximityMargin, solverTimer);
+        objectPathPosition = Mathf.Lerp(objectPathPosition, desiredPathLocation, smootheTime * Time.deltaTime);
     }
 }

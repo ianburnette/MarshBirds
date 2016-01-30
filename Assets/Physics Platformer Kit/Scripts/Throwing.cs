@@ -8,11 +8,12 @@ using System.Collections;
 [RequireComponent(typeof(PlayerMove))]
 public class Throwing : MonoBehaviour 
 {
-	public AudioClip pickUpSound;								//sound when you pickup/grab an object
-	public AudioClip throwSound;								//sound when you throw an object
+	public AudioClip pickUpSound;                               //sound when you pickup/grab an object
+    public AudioClip throwSound, placeSound;                    //sound when you throw an object
 	public GameObject grabBox;									//objects inside this trigger box can be picked up by the player (think of this as your reach)
 	public Vector3 holdOffset;									//position offset from centre of player, to hold the box (used to be "gap" in old version)
 	public Vector3 throwForce = new Vector3(0, 5, 7);			//the throw force of the player
+    public Vector3 placeForce = new Vector3(0, 2, 2);           //the force at which the player places the object
 	public float rotateToBlockSpeed = 3;						//how fast to face the "Pushable" object you're holding/pulling
 	public float checkRadius = 0.5f;							//how big a radius to check above the players head, to see if anything is in the way of your pickup
 	[Range(0.1f, 1f)]											//new weight of a carried object, 1 means no change, 0.1 means 10% of its original weight													
@@ -21,6 +22,8 @@ public class Throwing : MonoBehaviour
 	public float holdingBreakForce = 45, holdingBreakTorque = 45;//force and angularForce needed to break your grip on a "Pushable" object youre holding onto
 	public Animator animator;									//object with animation controller on, which you want to animate (usually same as in PlayerMove)
 	public int armsAnimationLayer;								//index of the animation layer for "arms"
+
+    public GameObject UIPrompt;                                 //the prompt for the player with the controls 
 	
 	[HideInInspector]
 	public GameObject heldObj;
@@ -63,14 +66,25 @@ public class Throwing : MonoBehaviour
 	//throwing/dropping
 	void Update()
 	{
+        if (heldObj && !UIPrompt.activeSelf)
+            UIPrompt.SetActive(true);
+        else if (!heldObj && UIPrompt.activeSelf)
+            UIPrompt.SetActive(false);
 		//when we press grab button, throw object if we're holding one
 		if (Input.GetButtonDown ("Grab") && heldObj && Time.time > timeOfPickup + 0.1f)
 		{
 			if(heldObj.tag == "Pickup") 
-				ThrowPickup();
+				PlacePickup();
 		}
-		//set animation value for arms layer
-		if(animator)
+
+        if (Input.GetButtonDown("Throw") && heldObj && Time.time > timeOfPickup + 0.1f)
+        {
+            if (heldObj.tag == "Pickup")
+                ThrowPickup();
+        }
+
+        //set animation value for arms layer
+        if (animator)
 			if(heldObj && heldObj.tag == "Pickup")
 				animator.SetBool ("HoldingPickup", true);
 			else
@@ -148,6 +162,7 @@ public class Throwing : MonoBehaviour
 			heldObj.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
 			heldObj.transform.position = holdPos;
 			heldObj.transform.rotation = transform.rotation;
+            heldObj.GetComponent<MoveOnPath>().held = true;
 			AddJoint();
 			//here we adjust the mass of the object, so it can seem heavy, but not effect player movement whilst were holding it
 			heldObj.GetComponent<Rigidbody>().mass *= weightChange;
@@ -164,15 +179,35 @@ public class Throwing : MonoBehaviour
 	}
 	
 	private void DropPushable()
-	{
+    { 
 		heldObj.GetComponent<Rigidbody>().interpolation = objectDefInterpolation;
 		Destroy (joint);
 		playerMove.rotateSpeed = defRotateSpeed;
-		heldObj = null;
+        heldObj.GetComponent<MoveOnPath>().held = false;
+        heldObj = null;
 		timeOfThrow = Time.time;
 	}
-	
-	public void ThrowPickup()
+
+    public void PlacePickup()
+    {
+        if (placeSound)
+        {
+            aSource.volume = 1;
+            aSource.clip = placeSound;
+            aSource.Play();
+        }
+        Destroy(joint);
+
+        Rigidbody r = heldObj.GetComponent<Rigidbody>();
+        r.interpolation = objectDefInterpolation;
+        r.mass /= weightChange;
+        r.AddRelativeForce(placeForce, ForceMode.VelocityChange);
+        heldObj.GetComponent<MoveOnPath>().held = false;
+        heldObj = null;
+        timeOfThrow = Time.time;
+    }
+
+    public void ThrowPickup()
 	{
 		if(throwSound)
 		{

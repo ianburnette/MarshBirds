@@ -12,6 +12,6 @@ public class CameraFollowPath : MonoBehaviour {
 	void FixedUpdate () {
         currentPath = playerPathScript.pathName;
         pathScript.pathName = "cam" + currentPath;
-        pathScript.pathPercentage = playerPathScript.playerPathPosition;
+        pathScript.pathPercentage = playerPathScript.objectPathPosition;
 	}
 }
