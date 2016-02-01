@@ -5,11 +5,14 @@
 [RequireComponent(typeof(Rigidbody))]
 public class CharacterMotor : MonoBehaviour 
 {
-	public bool sidescroller;		//freezes Z movement if true
+    public bool calculate = true;
+    public bool sidescroller;		//freezes Z movement if true
 	[HideInInspector]
 	public Vector3 currentSpeed;
 	[HideInInspector]
 	public float DistanceToTarget;
+
+    
 
 	private Rigidbody rigid;
 

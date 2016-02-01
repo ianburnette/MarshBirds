@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
 
 //this allows the player to pick up/throw, and also pull certain objects
@@ -9,7 +10,7 @@ using System.Collections;
 public class Throwing : MonoBehaviour 
 {
 	public AudioClip pickUpSound;                               //sound when you pickup/grab an object
-    public AudioClip throwSound, placeSound;                    //sound when you throw an object
+    public AudioClip throwSound, placeSound, storeSound;        //sound when you throw an object
 	public GameObject grabBox;									//objects inside this trigger box can be picked up by the player (think of this as your reach)
 	public Vector3 holdOffset;									//position offset from centre of player, to hold the box (used to be "gap" in old version)
 	public Vector3 throwForce = new Vector3(0, 5, 7);			//the throw force of the player
@@ -24,9 +25,13 @@ public class Throwing : MonoBehaviour
 	public int armsAnimationLayer;								//index of the animation layer for "arms"
 
     public GameObject UIPrompt;                                 //the prompt for the player with the controls 
+    public LayerMask mask;
+    public float currentPathValue;
+    public PathNodeJumper pathScript;
+
+    public GameObject heldObj;
+    [HideInInspector]
 	
-	[HideInInspector]
-	public GameObject heldObj;
 	private Vector3 holdPos;
 	private FixedJoint joint;
 	private float timeOfPickup, timeOfThrow, defRotateSpeed;
@@ -34,6 +39,7 @@ public class Throwing : MonoBehaviour
 	private AudioSource aSource;
 	
 	private PlayerMove playerMove;
+    private PlayerInventory inventoryScript;
 	//private CharacterMotor characterMotor;	line rendererd unnecessary for now. (see line 85)
 	private TriggerParent triggerParent;
 	private RigidbodyInterpolation objectDefInterpolation;
@@ -56,8 +62,9 @@ public class Throwing : MonoBehaviour
 		}
 		
 		playerMove = GetComponent<PlayerMove>();
-		//characterMotor = GetComponent<CharacterMotor>(); line rendererd unnecessary for now. (see line 85)
-		defRotateSpeed = playerMove.rotateSpeed;
+        inventoryScript = GetComponent<PlayerInventory>();
+        //characterMotor = GetComponent<CharacterMotor>(); line rendererd unnecessary for now. (see line 85)
+        defRotateSpeed = playerMove.rotateSpeed;
 		//set arms animation layer to animate with 1 weight (full override)
 		if(animator)
 			animator.SetLayerWeight(armsAnimationLayer, 1);
@@ -66,6 +73,7 @@ public class Throwing : MonoBehaviour
 	//throwing/dropping
 	void Update()
 	{
+        currentPathValue = pathScript.objectPathPosition;
         if (heldObj && !UIPrompt.activeSelf)
             UIPrompt.SetActive(true);
         else if (!heldObj && UIPrompt.activeSelf)
@@ -81,6 +89,14 @@ public class Throwing : MonoBehaviour
         {
             if (heldObj.tag == "Pickup")
                 ThrowPickup();
+        }
+
+        if (Input.GetButtonDown("Store") && heldObj && Time.time > timeOfPickup + 0.1f)
+        {
+            if (heldObj.tag == "Pickup")
+            {
+                StorePickup();
+            }
         }
 
         //set animation value for arms layer
@@ -132,6 +148,17 @@ public class Throwing : MonoBehaviour
 				GrabPushable(other);
 		}
 	}
+
+    public void PickupFromInventory(Collider item)
+    {
+        if (heldObj == null && timeOfThrow + 0.2f < Time.time)
+            LiftPickup(item);
+        else if (heldObj != null)
+        {
+            PlacePickup();
+            LiftPickup(item);
+        }
+    }
 			
 	private void GrabPushable(Collider other)
 	{
@@ -154,7 +181,7 @@ public class Throwing : MonoBehaviour
 		holdPos.y += (GetComponent<Collider>().bounds.extents.y) + (otherMesh.bounds.extents.y);
 		
 		//if there is space above our head, pick up item (this uses the defaul CheckSphere layers, you can add a layerMask parameter here if you need to though!)
-		if(!Physics.CheckSphere(holdPos, checkRadius))
+		if(!Physics.CheckSphere(holdPos, checkRadius, mask))
 		{
 			gizmoColor = Color.green;
 			heldObj = other.gameObject;
@@ -187,6 +214,21 @@ public class Throwing : MonoBehaviour
         heldObj = null;
 		timeOfThrow = Time.time;
 	}
+    
+    public void StorePickup()
+    {
+        inventoryScript.AddItem(heldObj);
+        if (storeSound)
+        {
+            aSource.volume = 1;
+            aSource.clip = storeSound;
+            aSource.Play();
+        }
+        Destroy(joint);
+        heldObj.GetComponent<MoveOnPath>().held = false;
+        heldObj = null;
+        timeOfThrow = Time.time;
+    }
 
     public void PlacePickup()
     {
@@ -201,7 +243,12 @@ public class Throwing : MonoBehaviour
         Rigidbody r = heldObj.GetComponent<Rigidbody>();
         r.interpolation = objectDefInterpolation;
         r.mass /= weightChange;
-        r.AddRelativeForce(placeForce, ForceMode.VelocityChange);
+        Vector3 forceToPlace = new Vector3(playerMove.publicMovementVector.x * placeForce.magnitude, placeForce.y, playerMove.publicMovementVector.z * placeForce.magnitude);//Vector3.Project(playerMove.publicMovementVector, throwForce);//Vector3.Project(throwForce, playerMove.publicMovementVector);
+        r.AddForce(forceToPlace, ForceMode.VelocityChange);
+
+
+        // r.AddRelativeForce(placeForce, ForceMode.VelocityChange);
+        heldObj.GetComponent<MoveOnPath>().NewPathPos(currentPathValue);
         heldObj.GetComponent<MoveOnPath>().held = false;
         heldObj = null;
         timeOfThrow = Time.time;
@@ -218,10 +265,15 @@ public class Throwing : MonoBehaviour
 		Destroy (joint);
 
 		Rigidbody r = heldObj.GetComponent<Rigidbody>();
-		r.interpolation = objectDefInterpolation;
+        heldObj.GetComponent<MoveOnPath>().NewPathPos(currentPathValue);
+        heldObj.GetComponent<MoveOnPath>().held = false;
+        r.interpolation = objectDefInterpolation;
 		r.mass /= weightChange;
-		r.AddRelativeForce (throwForce, ForceMode.VelocityChange);
+        Vector3 forceToThrow = new Vector3(playerMove.publicMovementVector.x * throwForce.magnitude, throwForce.y, playerMove.publicMovementVector.z * throwForce.magnitude);//Vector3.Project(playerMove.publicMovementVector, throwForce);//Vector3.Project(throwForce, playerMove.publicMovementVector);
+		r.AddForce (forceToThrow, ForceMode.VelocityChange);
 
+        Debug.DrawRay(r.transform.position, forceToThrow);
+        //EditorApplication.isPaused = true;
 		heldObj = null;
 		timeOfThrow = Time.time;
 	}

@@ -40,7 +40,7 @@ public class PlayerMove : MonoBehaviour
 	private Transform[] floorCheckers;
 	private Quaternion screenMovementSpace;
 	private float airPressTime, groundedCount, curAccel, curDecel, curRotateSpeed, slope;
-	private Vector3 direction, moveDirection, screenMovementForward, screenMovementRight, movingObjSpeed;
+	private Vector3 direction, moveDirection, screenMovementForward, screenMovementRight, movingObjSpeed, rawDirection;
 	
 	private CharacterMotor characterMotor;
 	private EnemyAI enemyAI;
@@ -112,10 +112,10 @@ public class PlayerMove : MonoBehaviour
 
         //only apply vertical input to movemement, if player is not sidescroller
         if (!sidescroller)
-            direction = (screenMovementForward * v) + (screenMovementRight * h);
+            direction = (screenMovementForward * -v) + (screenMovementRight * h);
         else
         {
-            Vector3 rawDirection = Vector3.zero;
+            //Vector3 rawDirection = Vector3.zero;
             if (h > 0) //trying to move right
             {
                 //rawDirection = movementReferenceForward.position - movementReferenceBase.position;
@@ -129,17 +129,22 @@ public class PlayerMove : MonoBehaviour
                 //rawDirection = transform.position - movementReferenceBackward.position;
             }
             // rawDirection = movementReferenceForward.position - movementReferenceBackward.position;// - movementReference.position;
-            
+            else
+            {
+             //   rawDirection = movementReferenceForward.position - new Vector3(transform.position.x, movementReferenceBase.position.y, transform.position.z);
+            }
             rawDirection.Normalize();
-            
+            publicMovementVector = rawDirection;
             direction = (rawDirection) * h;
+            if (direction != Vector3.zero)
+                publicMovementVector = direction;
             Debug.DrawRay(transform.position, rawDirection * 2f, Color.green);
         }
             //direction = Vector3.right * h;
         // direction = (screenMovementRight * h);
         //
         moveDirection = transform.position + direction;
-        publicMovementVector = direction;
+        //publicMovementVector = direction;
 	}
 	
 	//apply correct player movement (fixedUpdate for physics calculations)

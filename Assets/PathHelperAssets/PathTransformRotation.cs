@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(MoveAlongPath))]
+//[RequireComponent(typeof(MoveAlongPath))]
 public class PathTransformRotation : MonoBehaviour {
 
     [Tooltip("If this is true, the transform will always face lookTarget.")]
@@ -17,42 +17,59 @@ public class PathTransformRotation : MonoBehaviour {
     [Tooltip("If alignToPath is true, this is the distance along the path that the transform should look forward, measured in percentage of path length.")]
     [Range(0f, 100f)]
     public float lookForwardAmt = 25f;
+    public Transform toSet;
+    public bool ladder = false;
 
     private Quaternion targetRotation;
-    private Transform referenceTransform;
-    private MoveAlongPath pathMovementScript;
+    public Transform referenceTransform;
+    private PathNodeJumper pathMovementScript;
+    private MoveAlongPath ladderPath;
     //this variable controls the direction that the transform looks when orienting to path. it is multiplied by horizontalInput.
     private float inputPercentageDivisor = .01f;
     private float calculatedLookPercentage;
     private float normalizedLookPercentage;
+    private float foundPercentage;
 
     void Start () {
-        
-        pathMovementScript = GetComponent<MoveAlongPath>();
+
+        if (toSet == null)
+            toSet = transform;
+        if (!ladder)
+            pathMovementScript = GetComponent<PathNodeJumper>();
+        else
+            ladderPath = GetComponent<MoveAlongPath>();
         referenceTransform = new GameObject().transform;
         referenceTransform.transform.name = "PathRotationReferenceTransform";
         if (alignToPath)
             StartingLookPosition(true);
         else if (lookAtTarget)
             StartingLookPosition(false);
-            
     }
 
 	void FixedUpdate () {
+        GetPercentage();
         SetReferencePosition();
         CalculateRotation();
         SetRotation();
 	}
 
+    void GetPercentage()
+    {
+        if (!ladder)
+            foundPercentage = pathMovementScript.objectPathPosition;
+        else
+            foundPercentage = ladderPath.pathPercentage;
+    }
+
     void SetReferencePosition()
     {
-        referenceTransform.position = transform.position;
+        referenceTransform.position = toSet.position;
     }
 
     void StartingLookPosition(bool pathState)
     {
         if (pathState)
-            calculatedLookPercentage = pathMovementScript.pathPercentage - (lookForwardAmt / 100f);
+            calculatedLookPercentage = foundPercentage - (lookForwardAmt / 100f);
         else if (lookTarget == null)
         {
                 lookTarget = new GameObject().transform;
@@ -71,13 +88,13 @@ public class PathTransformRotation : MonoBehaviour {
             //Determine the percentage along the path that the transform should look at
             float hInput = Input.GetAxis("Horizontal");
             if (hInput > 0)
-                calculatedLookPercentage = pathMovementScript.pathPercentage - (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
+                calculatedLookPercentage = foundPercentage - (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
             else if (hInput < 0)
-                calculatedLookPercentage = pathMovementScript.pathPercentage + (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
+                calculatedLookPercentage = foundPercentage + (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
             normalizedLookPercentage = 0f;
 
             //Normalize this value if the percentage is outside 0-100 range
-            if (pathMovementScript.loop) //If the path is a closed loop, then the values loop around as well
+          /*  if (pathMovementScript.loop) //If the path is a closed loop, then the values loop around as well
             {
                 if (calculatedLookPercentage > 1f)
                     normalizedLookPercentage = calculatedLookPercentage - 1f;
@@ -85,14 +102,17 @@ public class PathTransformRotation : MonoBehaviour {
                     normalizedLookPercentage = 1f + calculatedLookPercentage;
                 else
                     normalizedLookPercentage = calculatedLookPercentage;
-            }
-            else //If the path is not a closed loop, just look at the end of the path as you get close to it
-            {
+            }*/
+            //else //If the path is not a closed loop, just look at the end of the path as you get close to it
+            //{
                 normalizedLookPercentage = Mathf.Clamp(calculatedLookPercentage, 0f, 1f);
-            }
+            //}
 
             //Set the reference transform's rotation to the calculated rotation
-            referenceTransform.transform.LookAt(iTween.PointOnPath(iTweenPath.GetPath(pathMovementScript.pathName),(normalizedLookPercentage)));
+            if (!ladder) 
+                referenceTransform.transform.LookAt(iTween.PointOnPath(iTweenPath.GetPath(pathMovementScript.pathName),(normalizedLookPercentage)));
+            else
+                referenceTransform.transform.LookAt(iTween.PointOnPath(iTweenPath.GetPath(ladderPath.pathName), (normalizedLookPercentage)));
         }
     }
 
@@ -100,10 +120,10 @@ public class PathTransformRotation : MonoBehaviour {
     {
         if (smoothLookRotation) //Smoothe the transform's rotation to match the reference transform's rotation
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation, referenceTransform.rotation, smoothSpeed * Time.deltaTime);
+            toSet.rotation = Quaternion.Lerp(transform.rotation, referenceTransform.rotation, smoothSpeed * Time.deltaTime);
         }else //Set hte transform's rotation to equal the reference transform's rotaton
         {
-            transform.rotation = referenceTransform.rotation;
+            toSet.rotation = referenceTransform.rotation;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 
 public class MoveAlongPath : MonoBehaviour {
 
+    public Transform toMove;
     [Tooltip("The location on the path that the transform will be set. This is controlled automatically.")]
     public float pathPercentage;
     [Tooltip("1-10 is a good range to start with")]
@@ -31,7 +32,7 @@ public class MoveAlongPath : MonoBehaviour {
 	}
 
     void GetControls() {
-        pathPercentage -= Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime * Time.deltaTime;
+        pathPercentage -= Input.GetAxis("Vertical") * moveSpeed * Time.deltaTime * Time.deltaTime;
         if (loop)
         {
             if (pathPercentage > 1f)
@@ -51,9 +52,9 @@ public class MoveAlongPath : MonoBehaviour {
     void SetPosition()
     {
         if (smoothMovement)
-            transform.position = Vector3.Lerp(transform.position, referenceTransform.position, smoothSpeed * Time.deltaTime);
+            toMove.position = Vector3.Lerp(transform.position, referenceTransform.position, smoothSpeed * Time.deltaTime);
         else
-            transform.position = referenceTransform.position;
+            toMove.position = referenceTransform.position;
     }
   
 }
