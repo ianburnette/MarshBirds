@@ -25,6 +25,7 @@ public class PlayerMove : MonoBehaviour
 	public float maxSpeed = 9;								//maximum speed of movement in X/Z axis
 	public float slopeLimit = 40, slideAmount = 35;			//maximum angle of slopes you can walk on, how fast to slide down slopes you can't
 	public float movingPlatformFriction = 7.7f;				//you'll need to tweak this to get the player to stay on moving platforms properly
+    public float walkSpeed, runSpeed;
 	
 	//jumping
 	public Vector3 jumpForce =  new Vector3(0, 13, 0);		//normal jump force
@@ -36,7 +37,7 @@ public class PlayerMove : MonoBehaviour
 	public int onEnemyBounce;					
 	
 	private int onJump;
-	private bool grounded;
+	private bool grounded, running;
 	private Transform[] floorCheckers;
 	private Quaternion screenMovementSpace;
 	private float airPressTime, groundedCount, curAccel, curDecel, curRotateSpeed, slope;
@@ -103,7 +104,11 @@ public class PlayerMove : MonoBehaviour
 		screenMovementSpace = Quaternion.Euler (0, mainCam.eulerAngles.y, 0);
 		screenMovementForward = screenMovementSpace * Vector3.forward;
 		screenMovementRight = screenMovementSpace * Vector3.right;
-		
+
+        //finds walk/run status
+        DetermineRun();
+      
+
 		//get movement input, set direction to move in
 		float h = Input.GetAxisRaw ("Horizontal");
 		float v = Input.GetAxisRaw ("Vertical");
@@ -147,6 +152,19 @@ public class PlayerMove : MonoBehaviour
         //publicMovementVector = direction;
 	}
 	
+    void DetermineRun()
+    {
+        if (Input.GetButtonDown("Run"))
+            running = true;
+        if (Input.GetButtonUp("Run"))
+            running = false;
+        if (running)
+            maxSpeed = runSpeed;
+        else
+            maxSpeed = walkSpeed;
+
+    }
+
 	//apply correct player movement (fixedUpdate for physics calculations)
 	void FixedUpdate() 
 	{

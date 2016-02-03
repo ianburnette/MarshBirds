@@ -22,6 +22,7 @@ public class PlayerInventory : MonoBehaviour {
 
     public void AddItem(GameObject itemToAdd)
     {
+        print("adding item");
         inventoryItems.Add(itemToAdd);
         itemToAdd.SetActive(false);
         itemsHeld++;
@@ -29,6 +30,7 @@ public class PlayerInventory : MonoBehaviour {
 
     public void RemoveItem(GameObject itemToRemove)
     {
+        print("Removing item");
         foreach (GameObject item in inventoryItems)
         {
             if (item == itemToRemove)

@@ -6,34 +6,49 @@ public class LadderScript : MonoBehaviour {
 
     public bool inLadderZone;
     public iTweenPath pathScript;
+
+    public float upperPercentage, lowerPercentage;
+    public string lowerPath, upperPath;
+    public float upperPathDistMargin, lowerPathDistMargin, upperPathStartingPercentage, lowerPathStartingPercentage, upperSmoothingTime, lowerSmoothingTime;
+
     private PlayerLadder playerLadderScript;
-    private MoveAlongPath pathMovement;
+    public MoveAlongPath pathMovement;
     private PathTransformRotation pathRotation;
 
-	// Use this for initialization
 	void Start () {
         playerLadderScript = GameObject.Find("Player").GetComponent<PlayerLadder>();
         pathScript = GetComponent<iTweenPath>();
 	}
-	
-	// Update is called once per frame
+
 	void Update () {
         playerLadderScript.inZone = inLadderZone;       
     }
 
-    void OnTriggerEnter(Collider other)
+    public void TriggerEntered(int whichTrigger, Transform other)
     {
-        if (other.transform.tag == "Player")
+        inLadderZone = true;
+        pathMovement = other.GetComponent<MoveAlongPath>();
+        pathMovement.pathName = pathScript.pathName;
+        if (whichTrigger == 0)
         {
-            inLadderZone = true;
-            pathMovement = other.GetComponent<MoveAlongPath>();
-            pathMovement.pathName = pathScript.pathName;
+            pathMovement.pathPercentage = upperPercentage;
+            playerLadderScript.pathControlScript.pathName = upperPath;
+            playerLadderScript.pathControlScript.distanceMargin = upperPathDistMargin;
+            playerLadderScript.pathControlScript.objectPathPosition = upperPathStartingPercentage;
+            playerLadderScript.pathControlScript.smootheTime= upperSmoothingTime;
+        }
+        else
+        {
+            pathMovement.pathPercentage = lowerPercentage;
+            playerLadderScript.pathControlScript.pathName = lowerPath;
+            playerLadderScript.pathControlScript.distanceMargin = lowerPathDistMargin;
+            playerLadderScript.pathControlScript.objectPathPosition = lowerPathStartingPercentage;
+            playerLadderScript.pathControlScript.smootheTime = lowerSmoothingTime;
         }
     }
-    
-    void OnTriggerExit(Collider other)
+
+    public void TriggerExited()
     {
-        if (other.transform.tag == "Player")
-            inLadderZone = false;
+        inLadderZone = false;
     }
 }

@@ -29,6 +29,8 @@ public class Throwing : MonoBehaviour
     public float currentPathValue;
     public PathNodeJumper pathScript;
 
+    public float rotationAmount;
+
     public GameObject heldObj;
     [HideInInspector]
 	
@@ -271,7 +273,7 @@ public class Throwing : MonoBehaviour
 		r.mass /= weightChange;
         Vector3 forceToThrow = new Vector3(playerMove.publicMovementVector.x * throwForce.magnitude, throwForce.y, playerMove.publicMovementVector.z * throwForce.magnitude);//Vector3.Project(playerMove.publicMovementVector, throwForce);//Vector3.Project(throwForce, playerMove.publicMovementVector);
 		r.AddForce (forceToThrow, ForceMode.VelocityChange);
-
+        r.AddTorque(new Vector3(Random.value, Random.value, Random.value) * rotationAmount);
         Debug.DrawRay(r.transform.position, forceToThrow);
         //EditorApplication.isPaused = true;
 		heldObj = null;

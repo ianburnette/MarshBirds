@@ -4,6 +4,7 @@ using System.Collections;
 public class PlayerLadder : MonoBehaviour {
 
     public bool inZone, onLadder;
+    public PathNodeJumper pathControlScript;
     public CharacterMotor motorScript;
     public PlayerMove moveScript;
     public Throwing throwScript;
@@ -13,14 +14,8 @@ public class PlayerLadder : MonoBehaviour {
     public PathTransformRotation pathRotation;
     private string pathName;
 
-	// Use this for initialization
-	void Start () {
-        
-	}
-	
-	// Update is called once per frame
 	void Update () {
-        if (inZone)
+        if (inZone && !onLadder)
             GetZoneLadderInput(); 
         else if (onLadder)
         {
@@ -43,7 +38,6 @@ public class PlayerLadder : MonoBehaviour {
         {
             JumpOff();
         }
-        
     }
 
     void GetZoneLadderInput()
@@ -61,6 +55,7 @@ public class PlayerLadder : MonoBehaviour {
 
     void JumpOff()
     {
+        print("jumping off");
         SetScripts(true);
         onLadder = false;
         SetPhysicsComponents(true);
