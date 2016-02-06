@@ -10,6 +10,10 @@ public class FreeRoam : MonoBehaviour {
         {
             other.GetComponent<PlayerMove>().sidescroller = false;
         }
+        else if (other.transform.tag == "Pickup")
+        {
+            other.GetComponent<MoveOnPath>().enabled = false;
+        }
     }
 
     void OnTriggerExit(Collider other)
@@ -17,6 +21,10 @@ public class FreeRoam : MonoBehaviour {
         if (other.transform.tag == "Player")
         {
             other.GetComponent<PlayerMove>().sidescroller = true;
+        }
+        else if (other.transform.tag == "Pickup")
+        {
+            other.GetComponent<MoveOnPath>().enabled = true;
         }
     }
 }

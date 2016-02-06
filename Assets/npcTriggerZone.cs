@@ -8,6 +8,9 @@ public class npcTriggerZone : MonoBehaviour {
     public bool inTriggerZone, inDialogue;
     public Transform player;
     public Tripod tripodScript;
+    public DialogueImplementation dialogueScript;
+    public TextAsset[] myDialogues;
+    public int currentDialogueIndex;
 
 	// Use this for initialization
 	void Start () {
@@ -28,8 +31,9 @@ public class npcTriggerZone : MonoBehaviour {
 
     void BeginDialogue()
     {
-        print("initiate dialogue here");
-        Invoke("EndDialogue", 2f);
+        dialogueScript.RunDialogueFromNPC(myDialogues[currentDialogueIndex].text);
+        //print("initiate dialogue here");
+        //Invoke("EndDialogue", 2f);
     }
 
     void EndDialogue()

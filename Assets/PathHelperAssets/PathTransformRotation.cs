@@ -86,7 +86,12 @@ public class PathTransformRotation : MonoBehaviour {
         else if (alignToPath)
         {
             //Determine the percentage along the path that the transform should look at
-            float hInput = Input.GetAxis("Horizontal");
+            float hInput;
+            if (ladder)
+                hInput = Input.GetAxis("Vertical");
+            else
+                hInput = Input.GetAxis("Horizontal");
+
             if (hInput > 0)
                 calculatedLookPercentage = foundPercentage - (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
             else if (hInput < 0)
@@ -120,8 +125,11 @@ public class PathTransformRotation : MonoBehaviour {
     {
         if (smoothLookRotation) //Smoothe the transform's rotation to match the reference transform's rotation
         {
+            //toSet.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.position - referenceTransform.position), smoothSpeed * Time.deltaTime);
+                //Quaternion.Lerp(transform.rotation, Quaternion.Euler(Vector3.Project(referenceTransform.rotation.eulerAngles,transform.rotation.eulerAngles)), smoothSpeed * Time.deltaTime);
             toSet.rotation = Quaternion.Lerp(transform.rotation, referenceTransform.rotation, smoothSpeed * Time.deltaTime);
-        }else //Set hte transform's rotation to equal the reference transform's rotaton
+        }
+        else //Set the transform's rotation to equal the reference transform's rotaton
         {
             toSet.rotation = referenceTransform.rotation;
         }
