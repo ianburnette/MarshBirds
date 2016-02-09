@@ -11,9 +11,12 @@ public class npcTriggerZone : MonoBehaviour {
     public DialogueImplementation dialogueScript;
     public TextAsset[] myDialogues;
     public int currentDialogueIndex;
+    public string[] speakers;
+    public Vector2[] speakerBubbleStartPositions;
+    public Vector2[] speakerBubbleEndPositions;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         promptUI.SetActive(false);
     }
 	
@@ -31,7 +34,7 @@ public class npcTriggerZone : MonoBehaviour {
 
     void BeginDialogue()
     {
-        dialogueScript.RunDialogueFromNPC(myDialogues[currentDialogueIndex].text);
+        dialogueScript.RunDialogueFromNPC(myDialogues[currentDialogueIndex].text, this);
         //print("initiate dialogue here");
         //Invoke("EndDialogue", 2f);
     }

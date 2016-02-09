@@ -8,15 +8,24 @@ public class DialogueImplementation : MonoBehaviour
 	[HideInInspector]
 	public int currentOption;
 	Dialogue dialogue;
-	public UnityEngine.UI.Text uiText;
+	public UnityEngine.UI.Text uiText, referenceText, choiceText, referenceChoiceText;
 	public GameObject[] optionButtons;
 	public TextAsset defaultDialogue;
 	bool scrolling;
+    public bool waitForWindow;
+    public DialogueWindowControl windowScript;
+    public string textToScroll;
+    public float transitionTime;
+    public DialogueMatchReference dialogueScript;
+    public npcTriggerZone npcScript;
+    public string[] currentChoiceTexts;
+    public int currentChoiceMax, currentChoiceIndex;
+    bool choiceInputReady = true;
 
-	void Awake()
+    void Awake()
 	{
 		dialogue = GetComponent<Dialogue>();
-
+        transitionTime = dialogueScript.matchSpeed;
 		foreach (var gameObject in optionButtons)
 		{
 			gameObject.SetActive(false);
@@ -28,8 +37,9 @@ public class DialogueImplementation : MonoBehaviour
 		}
 	}
 
-    public void RunDialogueFromNPC(string dialogueNameToRun)
+    public void RunDialogueFromNPC(string dialogueNameToRun, npcTriggerZone npcTriggerZoneScript)
     {
+        npcScript = npcTriggerZoneScript;
         dialogue.Run(dialogueNameToRun);
     }
 
@@ -42,14 +52,21 @@ public class DialogueImplementation : MonoBehaviour
                                                                 // fills in entire text if InputNext() returns true or if full text is already displayed
 	{
 		uiText.text = "";
-		string textToScroll = characterName + ": " + text;      // makes the text include the character's name
+        windowScript.inDialogue = true;                  // tells the window script that we're still talking
+        textToScroll = text;                             // makes the text to display the current text
+        windowScript.currentSpeaker = characterName;     // tells the bubble the character name
+        referenceText.text = textToScroll;               //sets the reference text to contain the full dialogue chunk
+
 		//CharacterData characterData = Global.constants.GetCharacterData(characterName);
 		//Global.textbox.Say(characterData, text);
 		const float timePerChar = .05f;
 		float accumTime = 0f;
 		int c = 0;
+        yield return new WaitForSeconds(transitionTime);
+
 		while (!InputNext() && c < textToScroll.Length)
 		{
+            print("entered typing loop");
 			yield return null;
 			accumTime += Time.deltaTime;
 			while (accumTime > timePerChar)
@@ -60,7 +77,8 @@ public class DialogueImplementation : MonoBehaviour
 				c++;
 			}
 		}
-		uiText.text = textToScroll;
+      
+	    uiText.text = textToScroll;
 
 		while (InputNext()) yield return null;
 
@@ -69,7 +87,7 @@ public class DialogueImplementation : MonoBehaviour
 
 	public bool InputNext()
 	{
-		return Input.GetButtonDown() || Input.GetMouseButtonDown(0);
+        return Input.GetButtonDown("Jump");
 	}
 
 	public IEnumerator EndText()
@@ -107,15 +125,37 @@ public class DialogueImplementation : MonoBehaviour
 
 		yield return null;
 
-		int index = 0;
-		foreach (var option in options) // make all of the choice buttons active
-		{
-			optionButtons[index].SetActive(true);
-			optionButtons[index].GetComponentInChildren<UnityEngine.UI.Text>().text = option.text;  //gives each of them the text from a choice in the text file
-			index++;
-		}
-		
-		/*
+       
+        windowScript.HideDialogue();            //disable the normal dialogue bubble
+        referenceChoiceText.text = "";          //enable the choice dialogue bubble and the choice reference bubble
+        windowScript.ShowChoices();             //populate a string array with the choices, with their indices being equivalent to the option indicies
+        windowScript.DrawChoiceBubble();
+        UpdateChoiceString();
+        currentChoiceIndex = 0;
+        currentChoiceMax = 0;
+        int index = 0;
+        foreach (var option in options) // make all of the choice buttons active
+        {
+            currentChoiceTexts[index] = option.text;  //gives each of them the text from a choice in the text file
+            index++;
+        }
+        currentChoiceMax = index-1;
+        
+        //fill the reference box with the current text
+        referenceChoiceText.text = currentChoiceTexts[currentChoiceIndex];
+        //move the choice bubble to the starting position and tween as normal
+
+        //accept input to change selected option
+
+
+        //foreach (var option in options) // make all of the choice buttons active
+        //{
+        //	optionButtons[index].SetActive(true);
+        //	optionButtons[index].GetComponentInChildren<UnityEngine.UI.Text>().text = option.text;  //gives each of them the text from a choice in the text file
+        //	index++;
+        //}
+
+        /*
 		List<OptionButton> optionButtons = new List<OptionButton>();
 		int index = 0;
 		foreach (var option in options)
@@ -128,9 +168,14 @@ public class DialogueImplementation : MonoBehaviour
 			index++;
 		}
 		*/
+        UpdateChoiceString();
 
-		currentOption = -1;
-		do { yield return null; } while (currentOption == -1);
+        currentOption = -1;
+		do {
+            GetChoiceInput();
+            yield return null;
+
+        } while (currentOption == -1);
 
 		//Global.textbox.Say(null, "");
 
@@ -151,6 +196,46 @@ public class DialogueImplementation : MonoBehaviour
 
 		dialogue.SetCurrentOption(currentOption); //tells dialogue script what option was chosen
 	}
+
+    void GetChoiceInput()
+    {
+        print("getting choiceinput");
+        if (choiceInputReady)
+        {
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                if (currentChoiceIndex >= currentChoiceMax)
+                    currentChoiceIndex = 0;
+                else
+                    currentChoiceIndex++;
+            } else if (Input.GetKeyDown(KeyCode.A)) 
+            {
+                if (currentChoiceIndex <= 0)
+                    currentChoiceIndex = currentChoiceMax;
+                else
+                    currentChoiceIndex--;
+            }
+        }
+        else
+        {
+            if (Input.GetAxis("Horizontal") == 0)
+            {
+                choiceInputReady = true;
+            }
+        }
+        if (referenceChoiceText.text != currentChoiceTexts[currentChoiceIndex])
+            UpdateChoiceString();
+        if (Input.GetButtonDown("Jump"))
+        {
+            currentOption = currentChoiceIndex;
+        }
+    }
+
+    void UpdateChoiceString()
+    {
+        referenceChoiceText.text = currentChoiceTexts[currentChoiceIndex];
+        windowScript.ChangeChoiceBubble();
+    }
 
 	public IEnumerator RunCommand(string line)
 	{
