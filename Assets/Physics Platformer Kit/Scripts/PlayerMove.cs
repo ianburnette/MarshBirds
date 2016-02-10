@@ -152,6 +152,11 @@ public class PlayerMove : MonoBehaviour
         //publicMovementVector = direction;
 	}
 	
+    void OnDisabled()
+    {
+        moveDirection = Vector3.zero;
+    }
+
     void DetermineRun()
     {
         if (Input.GetButtonDown("Run"))

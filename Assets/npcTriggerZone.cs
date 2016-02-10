@@ -34,17 +34,29 @@ public class npcTriggerZone : MonoBehaviour {
 
     void BeginDialogue()
     {
+        TogglePlayerControls(false);
         dialogueScript.RunDialogueFromNPC(myDialogues[currentDialogueIndex].text, this);
         //print("initiate dialogue here");
         //Invoke("EndDialogue", 2f);
     }
 
-    void EndDialogue()
+    void TogglePlayerControls(bool state)
+    {
+        player.GetComponent<PlayerMove>().enabled = state;
+        player.GetComponent<Throwing>().enabled = state;
+        player.GetComponent<Health>().enabled = state;
+        player.GetComponent<PlayerInventory>().enabled = state;
+        player.GetComponent<PlayerLadder>().enabled = state;
+        player.GetComponent<CharacterMotor>().InDialogue(!state);
+    }
+
+    public void EndDialogue()
     {
         inDialogue = false;
         ToggleMovement(true);
         ToggleCamera(true);
         tripodScript.referenceTransform = null;
+        TogglePlayerControls(true);
     }
 
     void ToggleCamera(bool state)

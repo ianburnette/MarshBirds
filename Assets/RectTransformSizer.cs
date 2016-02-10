@@ -23,8 +23,6 @@ public class RectTransformSizer : MonoBehaviour {
     void UpdateWidth(float newWidth)
     {
         myRect.sizeDelta = new Vector2(newWidth, myRect.sizeDelta.y);
-        if (transform.name == "choiceTextBox")
-            print("setting width to " + newWidth);
     }
 
     void UpdateHeight(float newHeight)

@@ -12,7 +12,7 @@ public class CharacterMotor : MonoBehaviour
 	[HideInInspector]
 	public float DistanceToTarget;
 
-    
+    public bool inDialogue;
 
 	private Rigidbody rigid;
 
@@ -39,6 +39,11 @@ public class CharacterMotor : MonoBehaviour
 		}
 	}
 	
+    public void InDialogue(bool state)
+    {
+        rigid.isKinematic = state;
+    }
+
 	//move rigidbody to a target and return the bool "have we arrived?"
 	public bool MoveTo(Vector3 destination, float acceleration, float stopDistance, bool ignoreY)
 	{

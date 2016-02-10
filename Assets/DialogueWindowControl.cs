@@ -54,6 +54,7 @@ public class DialogueWindowControl : MonoBehaviour {
     {
         implementation.waitForWindow = true;
         DialogueMatchReference matchRef = choiceDialogueBubble.GetComponent<DialogueMatchReference>();
+        implementation.choiceText.text = "";
         matchRef.Match();
         Invoke("ShowChoice", matchRef.matchSpeed);
     }

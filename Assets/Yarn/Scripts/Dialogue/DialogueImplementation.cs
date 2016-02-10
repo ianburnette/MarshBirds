@@ -66,7 +66,7 @@ public class DialogueImplementation : MonoBehaviour
 
 		while (!InputNext() && c < textToScroll.Length)
 		{
-            print("entered typing loop");
+//print("entered typing loop");
 			yield return null;
 			accumTime += Time.deltaTime;
 			while (accumTime > timePerChar)
@@ -92,7 +92,8 @@ public class DialogueImplementation : MonoBehaviour
 
 	public IEnumerator EndText()
 	{
-		//Global.textbox.Hide();        //hide the text box here
+        //Global.textbox.Hide();      //hide the text box here
+        npcScript.EndDialogue();
 		uiText.text = "";
 		yield break;
 	}
@@ -118,6 +119,7 @@ public class DialogueImplementation : MonoBehaviour
 	{
 		currentOption = 3;
 	}
+
 
 	public IEnumerator RunOptions(List<Dialogue.Option> options)
 	{
@@ -168,39 +170,38 @@ public class DialogueImplementation : MonoBehaviour
 			index++;
 		}
 		*/
-        UpdateChoiceString();
 
+        UpdateChoiceString();
         currentOption = -1;
 		do {
-            GetChoiceInput();
             yield return null;
+            GetChoiceInput();
+          } while (currentOption == -1);
 
-        } while (currentOption == -1);
+            //Global.textbox.Say(null, "");
 
-		//Global.textbox.Say(null, "");
+            /*
+            for (int i = 0; i < optionButtons.Count; i++)
+            {
+                if (i != currentOption)
+                    optionButtons[i].Hide();
+            }
+            */
 
-		/*
-		for (int i = 0; i < optionButtons.Count; i++)
-		{
-			if (i != currentOption)
-				optionButtons[i].Hide();
-		}
-		*/
+            //yield return new WaitForSeconds(.71f);
 
-		//yield return new WaitForSeconds(.71f);
-
-		foreach (var gameObject in optionButtons)
+            foreach (var gameObject in optionButtons)
 		{
 			gameObject.SetActive(false);
 		}
 
 		dialogue.SetCurrentOption(currentOption); //tells dialogue script what option was chosen
-        
+        windowScript.HideChoices();
 	}
 
     void GetChoiceInput()
     {
-        print("getting choiceinput");
+     //   print("getting choiceinput");
         if (choiceInputReady)
         {
             if (Input.GetKeyDown(KeyCode.D))
@@ -234,8 +235,10 @@ public class DialogueImplementation : MonoBehaviour
 
     void UpdateChoiceString()
     {
+       
         referenceChoiceText.text = currentChoiceTexts[currentChoiceIndex];
         windowScript.ChangeChoiceBubble();
+        //windowScript.ChangeChoiceBubble();
     }
 
 	public IEnumerator RunCommand(string line)
