@@ -10,18 +10,18 @@ public class DialogueWindowControl : MonoBehaviour {
     private int speakerIndex;
     public RectTransform dialogueBubble, referenceBubble;
     public RectTransform choiceDialogueBubble, choiceReferenceBubble;
-
-    void Start () {
-        	
-	}
 	
 	void Update () {
 	    if (mostRecentSpeaker != currentSpeaker)    //if speakers have changed 
         {
+            if (!dialogueBubble.gameObject.activeSelf)
+                dialogueBubble.gameObject.SetActive(true);
             mostRecentSpeaker = currentSpeaker;     //update most recent speaker
             DrawNewProcess();                       //make window go to correct place
         }
 	}
+
+
 
     void DrawNewProcess()
     {
@@ -41,7 +41,7 @@ public class DialogueWindowControl : MonoBehaviour {
 
     void PlaceChoiceWindow()
     {
-        print("initializing choice window");
+      //  print("initializing choice window");
         choiceDialogueBubble.localPosition = startVector;
         choiceDialogueBubble.sizeDelta = Vector2.zero;
         choiceReferenceBubble.localPosition = endVector;

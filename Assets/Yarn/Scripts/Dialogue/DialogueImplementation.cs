@@ -195,6 +195,7 @@ public class DialogueImplementation : MonoBehaviour
 		}
 
 		dialogue.SetCurrentOption(currentOption); //tells dialogue script what option was chosen
+        
 	}
 
     void GetChoiceInput()
