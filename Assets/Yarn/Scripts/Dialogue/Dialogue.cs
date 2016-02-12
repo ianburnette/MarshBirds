@@ -52,7 +52,7 @@ public class Dialogue : MonoBehaviour
 	List<Node> nodes = new List<Node>();
 	public Node currentNode { get; private set; }
 	// glue for extra commands, output, options, characters
-	public DialogueImplementation implementation { get; private set; }
+	public CustomDialogueImplementation implementation { get; private set; }
 	List<string> visitedNodes = new List<string>();
 	string filename = "";
 	string characterName = "", lastCharacterName = "";
@@ -84,7 +84,7 @@ public class Dialogue : MonoBehaviour
 
 	void Awake()
 	{
-		implementation = GetComponent<DialogueImplementation>();
+		implementation = GetComponent<CustomDialogueImplementation>();
 	}
 
 	void Start()

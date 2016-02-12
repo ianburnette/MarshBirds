@@ -8,7 +8,7 @@ public class npcTriggerZone : MonoBehaviour {
     public bool inTriggerZone, inDialogue;
     public Transform player;
     public Tripod tripodScript;
-    public DialogueImplementation dialogueScript;
+    public CustomDialogueImplementation dialogueScript;
     public TextAsset[] myDialogues;
     public int currentDialogueIndex;
     public string[] speakers;

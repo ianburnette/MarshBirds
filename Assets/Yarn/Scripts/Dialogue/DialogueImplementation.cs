@@ -224,6 +224,10 @@ public class DialogueImplementation : MonoBehaviour
             {
                 choiceInputReady = true;
             }
+            else
+            {
+                print("input is " + Input.GetAxis("Horizontal"));
+            }
         }
         if (referenceChoiceText.text != currentChoiceTexts[currentChoiceIndex])
             UpdateChoiceString();

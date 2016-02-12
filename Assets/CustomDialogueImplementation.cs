@@ -144,19 +144,51 @@ public class CustomDialogueImplementation : MonoBehaviour {
     }
     public IEnumerator RunOptions(List<Dialogue.Option> options)
     {
+        
         currentTextToTypeTo = choiceBubbleText;         //we'll type to the choice bubble
         dialogue.SetCurrentOption(0);                   //make sure no text is currently selected
         yield return null;                              //wait for the dialogue script to realize current option is zero
-        ToggleDialogue(false, dialogueObject);
-        ToggleDialogue(true, choiceObject);
+        ToggleDialogue(false, dialogueObject);          //turn off the normal dialogue object
+        ToggleDialogue(true, choiceObject);             //turn on the choice object
+        choiceReferenceText.text = "";
+        currentChoiceIndex = currentChoiceMax = 0;
+        int index = 0;
+        foreach (var option in options)
+        {
+            currentChoiceTexts[index] = option.text;
+            index++;
+        }
+        currentChoiceMax = index - 1;
+        choiceReferenceText.text = currentChoiceTexts[currentChoiceIndex];
+        for (int i = 0; i < dialogueRect.Length; i++)
+            ResizeAndGrowRect(choiceRect[i], referenceChoiceRect[i], 0);
+        chosenOption = -1;
+        choiceInputReady = true;
+        do
+        {
+            yield return null;
+            if (choiceInputReady)
+                playerControl.GetChoiceInput();
+        } while (chosenOption == -1);
+        ToggleDialogue(false, choiceObject);           //turn off the choice object
+        ToggleDialogue(true, dialogueObject);          //turn on the normal dialogue object
+        dialogue.SetCurrentOption(chosenOption);       //tell the dialogue that we've chosen something
+    }
+    public void ChangeOption (int optionToChangeTo)
+    {
+        print("changing option");
+        currentChoiceIndex = optionToChangeTo;
+        choiceReferenceText.text = currentChoiceTexts[currentChoiceIndex];
+        for (int i = 0; i < dialogueRect.Length; i++)
+            ResizeRect(choiceRect[i], referenceChoiceRect[i]);
     }
     //WINDOW FUNCTIONS
     void DrawNewDialogueBubble(int bubbleType)
     {
         //set positions first
         int speakerIndex = npcScript.GetSpeakerIndex(currentSpeaker);
-        dialogueRefTransform.position = npcScript.speakerBubbleEndPositions[speakerIndex];
-        dialogueBaseTransform.position = npcScript.speakerBubbleStartPositions[speakerIndex];
+        dialogueRefTransform.localPosition = npcScript.speakerBubbleEndPositions[speakerIndex];
+        dialogueBaseTransform.localPosition = npcScript.speakerBubbleStartPositions[speakerIndex];
 
         if (bubbleType == 0) //we're drawing a new normal dialogue bubble
         {
@@ -174,7 +206,7 @@ public class CustomDialogueImplementation : MonoBehaviour {
     void ResizeAndGrowRect (RectTransform toResize, RectTransform toMatch, int indexToMatch)
     {
         //set the reference bubble to the correct position
-        toMatch.position =new Vector2(npcScript.speakerBubbleEndPositions[indexToMatch].x,
+        toMatch.localPosition = new Vector2(npcScript.speakerBubbleEndPositions[indexToMatch].x,
                                       npcScript.speakerBubbleEndPositions[indexToMatch].y);
         //tween the first to match the second
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.x, "to", toMatch.position.x, "onupdate", "UpdateXpos", "time", transitionTime, "easetype", easeTypeToUse));
@@ -236,6 +268,10 @@ public class CustomDialogueImplementation : MonoBehaviour {
     {
         return string.Compare(strA, strB, System.StringComparison.InvariantCultureIgnoreCase) == 0;
     }
+    public void SetString(string varName, string varValue)
+    {
+        // TODO: write this!
+    }
     public bool EvaluateIfChunk(string chunk, ref bool result)
     {
         return false;
@@ -263,6 +299,4 @@ public class CustomDialogueImplementation : MonoBehaviour {
     {
         return false;
     }
-
-
 }
