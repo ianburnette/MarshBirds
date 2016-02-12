@@ -19,7 +19,7 @@ public class CustomDialogueImplementation : MonoBehaviour {
     -disables the player's movement scripts when dialogue is entered, and reenables them after
     -controls continuity changes
     */
-
+    #region//VARIABLES
     //choice variables
     public int chosenOption;                            //formerly currentOption, the choice the player chose
     public string[] currentChoiceTexts;                 //array of string of all current choices
@@ -52,21 +52,22 @@ public class CustomDialogueImplementation : MonoBehaviour {
     public iTween.EaseType easeTypeToUse;               //the ease type to use when tweening
     //player input
     public bool playerHasPressedNext;                   //if the player pressed next this frame
-
-    //INITIALIZATION
+    #endregion
+    #region//INITIALIZATION
     void Awake()
     {
         dialogue = GetComponent<Dialogue>();
         dialogueObject.SetActive(false);
         choiceObject.SetActive(false);
     }
-    //OPERATIONS
+    #endregion
+    #region//OPERATIONS
     public void RunDialogueFromNPC(string dialogueNameToRun, npcTriggerZone npcTrigger)
     {
         npcScript = npcTrigger;
         dialogue.Run(dialogueNameToRun);
         //this might need to happen later
-        ToggleDialogue(true, dialogueObject);           
+        ToggleDialogue(true, dialogueObject);
     }
     void ToggleDialogue(bool state, GameObject dialogueObjectToToggle)
     {
@@ -100,7 +101,8 @@ public class CustomDialogueImplementation : MonoBehaviour {
         else
             return false;
     }
-    //TEXT DISPLAY
+#endregion
+    #region//TEXT DISPLAY
     public IEnumerator Say(string characterName, string text)
     {
         if (!dialogueObject.activeSelf)
@@ -112,22 +114,26 @@ public class CustomDialogueImplementation : MonoBehaviour {
         ClearText(currentTextToTypeTo);
         dialogueReferenceText.text = text;
         currentSpeaker = characterName;
+        //yield return new WaitForSeconds(.5f) ;
         if (currentSpeaker != mostRecentSpeaker)
             DrawNewDialogueBubble(0);
         else
-            for (int i = 0; i<dialogueRect.Length; i++)
+            for (int i = 0; i < dialogueRect.Length; i++)
+            {
+                
                 ResizeRect(dialogueRect[i], referenceDialogueRect[i]);
-        do{                                             //hold off until window is displayed
+            }
+        do {                                             //hold off until window is displayed
             yield return null;
         } while (waitToType);
         //typing calculations
         float accumTime = 0f;
         int c = 0;
-        while(!InputNext() && c < dialogueReferenceText.text.Length)
+        while (!InputNext() && c < dialogueReferenceText.text.Length)
         {
             yield return null;
             accumTime += Time.deltaTime;
-            while(accumTime > typeTime)
+            while (accumTime > typeTime)
             {
                 accumTime -= typeTime;
                 if (c < dialogueReferenceText.text.Length)
@@ -144,7 +150,6 @@ public class CustomDialogueImplementation : MonoBehaviour {
     }
     public IEnumerator RunOptions(List<Dialogue.Option> options)
     {
-        
         currentTextToTypeTo = choiceBubbleText;         //we'll type to the choice bubble
         dialogue.SetCurrentOption(0);                   //make sure no text is currently selected
         yield return null;                              //wait for the dialogue script to realize current option is zero
@@ -162,27 +167,41 @@ public class CustomDialogueImplementation : MonoBehaviour {
         choiceReferenceText.text = currentChoiceTexts[currentChoiceIndex];
         for (int i = 0; i < dialogueRect.Length; i++)
             ResizeAndGrowRect(choiceRect[i], referenceChoiceRect[i], 0);
+     //   do
+      //  {
+       //     yield return null;
+        //} while (waitToType);
         chosenOption = -1;
         choiceInputReady = true;
+        StartCoroutine("ChangeOption", 0);
         do
         {
             yield return null;
             if (choiceInputReady)
                 playerControl.GetChoiceInput();
+           
         } while (chosenOption == -1);
         ToggleDialogue(false, choiceObject);           //turn off the choice object
         ToggleDialogue(true, dialogueObject);          //turn on the normal dialogue object
         dialogue.SetCurrentOption(chosenOption);       //tell the dialogue that we've chosen something
     }
-    public void ChangeOption (int optionToChangeTo)
+    public IEnumerator ChangeOption(int optionToChangeTo)
     {
         print("changing option");
         currentChoiceIndex = optionToChangeTo;
         choiceReferenceText.text = currentChoiceTexts[currentChoiceIndex];
-        for (int i = 0; i < dialogueRect.Length; i++)
+        yield return new WaitForSeconds(.02f);
+        for (int i = 0; i < choiceRect.Length; i++)
+        {
+//print("resizing " + choiceRect[i] + " to " + referenceChoiceRect[i] + " and i is " + i); 
             ResizeRect(choiceRect[i], referenceChoiceRect[i]);
+        }
+        yield return new WaitForSeconds(transitionTime);
+        choiceBubbleText.text = choiceReferenceText.text;
+        yield return null;
     }
-    //WINDOW FUNCTIONS
+    #endregion
+    #region//WINDOW FUNCTIONS
     void DrawNewDialogueBubble(int bubbleType)
     {
         //set positions first
@@ -200,14 +219,16 @@ public class CustomDialogueImplementation : MonoBehaviour {
             for (int i = 0; i < choiceRect.Length; i++)
                 ResizeRect(choiceRect[i], referenceChoiceRect[i]);
         }
-        
+
         mostRecentSpeaker = currentSpeaker;
     }
-    void ResizeAndGrowRect (RectTransform toResize, RectTransform toMatch, int indexToMatch)
+    void ResizeAndGrowRect(RectTransform toResize, RectTransform toMatch, int indexToMatch)
     {
         //set the reference bubble to the correct position
         toMatch.localPosition = new Vector2(npcScript.speakerBubbleEndPositions[indexToMatch].x,
                                       npcScript.speakerBubbleEndPositions[indexToMatch].y);
+        toResize.sizeDelta = Vector2.zero;
+        waitToType = true;                  //stop the dialogue from typing
         //tween the first to match the second
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.x, "to", toMatch.position.x, "onupdate", "UpdateXpos", "time", transitionTime, "easetype", easeTypeToUse));
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.y, "to", toMatch.position.y, "onupdate", "UpdateYpos", "time", transitionTime, "easetype", easeTypeToUse));
@@ -215,8 +236,9 @@ public class CustomDialogueImplementation : MonoBehaviour {
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
         Invoke("ReadyToType", transitionTime);          //resets the waiting bool in the same length as the tween time
     }
-    void ResizeRect (RectTransform toResize, RectTransform toMatch)
+    void ResizeRect(RectTransform toResize, RectTransform toMatch)
     {
+        waitToType = true;                  //stop the dialogue from typing
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
         Invoke("ReadyToType", transitionTime);
@@ -225,7 +247,8 @@ public class CustomDialogueImplementation : MonoBehaviour {
     {
         waitToType = false;
     }
-    //CARRY OVER FUNCTIONS FROM DEFAULT IMPLEMENTATION
+    #endregion
+    #region //CARRY OVER FUNCTIONS FROM DEFAULT IMPLEMENTATION
     public string Parse(string characterName, string line)
     {
         return line;
@@ -276,7 +299,8 @@ public class CustomDialogueImplementation : MonoBehaviour {
     {
         return false;
     }
-    //CONTINUITY
+    #endregion
+    #region//CONTINUITY
     public void SetInteger(string varName, int varValue)
     {
         Continuity.instance.SetVar(varName, varValue);
@@ -289,14 +313,17 @@ public class CustomDialogueImplementation : MonoBehaviour {
     {
         Continuity.instance.SetVar(varName, Continuity.instance.GetVar(varName) + addAmount);
     }
-    //ERROR HANDLING
+    #endregion
+    #region//ERROR HANDLING
     public void NodeFail()
     {
         print("node not found?");
     }
-    //PAUSE HANDLING
+    #endregion
+    #region//PAUSE HANDLING
     public bool IsPaused()
     {
         return false;
     }
+    #endregion
 }

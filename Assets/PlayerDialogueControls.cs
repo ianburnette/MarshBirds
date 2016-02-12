@@ -33,17 +33,17 @@ public class PlayerDialogueControls : MonoBehaviour {
         if (Input.GetAxis("Horizontal") > 0)
         {
             if (dialogueScript.currentChoiceIndex >= dialogueScript.currentChoiceMax)
-                dialogueScript.ChangeOption(0);//dialogueScript.currentChoiceIndex = 0;
+                ChangeOption(0);//dialogueScript.currentChoiceIndex = 0;
             else
-                dialogueScript.ChangeOption(dialogueScript.currentChoiceIndex+1);
+                ChangeOption(dialogueScript.currentChoiceIndex+1);
             dialogueScript.choiceInputReady = false;
         }
         else if (Input.GetAxis("Horizontal") < 0)
         {
             if (dialogueScript.currentChoiceIndex <= 0)
-                dialogueScript.ChangeOption(dialogueScript.currentChoiceMax); //dialogueScript.currentChoiceIndex = dialogueScript.currentChoiceMax;
+                ChangeOption(dialogueScript.currentChoiceMax); //dialogueScript.currentChoiceIndex = dialogueScript.currentChoiceMax;
             else
-                dialogueScript.ChangeOption(dialogueScript.currentChoiceIndex - 1);//dialogueScript.currentChoiceIndex--;
+                ChangeOption(dialogueScript.currentChoiceIndex - 1);//dialogueScript.currentChoiceIndex--;
             dialogueScript.choiceInputReady = false;
         }
     
@@ -51,6 +51,11 @@ public class PlayerDialogueControls : MonoBehaviour {
         {
             dialogueScript.chosenOption = dialogueScript.currentChoiceIndex;
         }
+    }
+
+    void ChangeOption(int newOption)
+    {
+        dialogueScript.StartCoroutine("ChangeOption", newOption);
     }
 
     void CheckForReset()
