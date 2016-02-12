@@ -38,8 +38,10 @@ public class CustomDialogueImplementation : MonoBehaviour {
     public Text dialogueBubbleText, dialogueReferenceText, choiceBubbleText, choiceReferenceText;
     public string mostRecentlyDisplayedText;            //the text to check against when drawing a new window
     public GameObject dialogueObject, choiceObject;     //the parent gameobjects for the dialogue components
+    public Transform dialogueBaseTransform, choiceBaseTransform;    //the parents that we'll move around
+    public Transform dialogueRefTransform, choiceRefTransform;      //the same for the references
     public RectTransform[] dialogueRect, choiceRect;    //the rects to resize
-    public RectTransform[] referenceDialogueRect, choiceDialogueRect;   //the rects to match
+    public RectTransform[] referenceDialogueRect, referenceChoiceRect;   //the rects to match
     //Display control
     public bool waitToType = false;                     //should the script wait to type
     public float transitionTime;                        //how long do movement animations take?
@@ -58,7 +60,6 @@ public class CustomDialogueImplementation : MonoBehaviour {
         dialogueObject.SetActive(false);
         choiceObject.SetActive(false);
     }
-
     //OPERATIONS
     public void RunDialogueFromNPC(string dialogueNameToRun, npcTriggerZone npcTrigger)
     {
@@ -112,7 +113,7 @@ public class CustomDialogueImplementation : MonoBehaviour {
         dialogueReferenceText.text = text;
         currentSpeaker = characterName;
         if (currentSpeaker != mostRecentSpeaker)
-            DrawNewDialogueBubble();
+            DrawNewDialogueBubble(0);
         else
             for (int i = 0; i<dialogueRect.Length; i++)
                 ResizeRect(dialogueRect[i], referenceDialogueRect[i]);
@@ -141,7 +142,6 @@ public class CustomDialogueImplementation : MonoBehaviour {
         while (InputNext()) yield return null;
         while (!InputNext()) yield return null;
     }
-
     public IEnumerator RunOptions(List<Dialogue.Option> options)
     {
         currentTextToTypeTo = choiceBubbleText;         //we'll type to the choice bubble
@@ -150,22 +150,44 @@ public class CustomDialogueImplementation : MonoBehaviour {
         ToggleDialogue(false, dialogueObject);
         ToggleDialogue(true, choiceObject);
     }
-
     //WINDOW FUNCTIONS
-    void DrawNewDialogueBubble()
+    void DrawNewDialogueBubble(int bubbleType)
     {
-        //redraws the dialogue bubble in correct position for new speaker
+        //set positions first
+        int speakerIndex = npcScript.GetSpeakerIndex(currentSpeaker);
+        dialogueRefTransform.position = npcScript.speakerBubbleEndPositions[speakerIndex];
+        dialogueBaseTransform.position = npcScript.speakerBubbleStartPositions[speakerIndex];
+
+        if (bubbleType == 0) //we're drawing a new normal dialogue bubble
+        {
+            for (int i = 0; i < dialogueRect.Length; i++)
+                ResizeAndGrowRect(dialogueRect[i], referenceDialogueRect[i], speakerIndex);
+        }
+        else //we're drawing a choice bubble
+        {
+            for (int i = 0; i < choiceRect.Length; i++)
+                ResizeRect(choiceRect[i], referenceChoiceRect[i]);
+        }
+        
         mostRecentSpeaker = currentSpeaker;
     }
-    void ResizeRect (RectTransform toResize, RectTransform toMatch)
+    void ResizeAndGrowRect (RectTransform toResize, RectTransform toMatch, int indexToMatch)
     {
+        //set the reference bubble to the correct position
+        toMatch.position =new Vector2(npcScript.speakerBubbleEndPositions[indexToMatch].x,
+                                      npcScript.speakerBubbleEndPositions[indexToMatch].y);
         //tween the first to match the second
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.x, "to", toMatch.position.x, "onupdate", "UpdateXpos", "time", transitionTime, "easetype", easeTypeToUse));
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.y, "to", toMatch.position.y, "onupdate", "UpdateYpos", "time", transitionTime, "easetype", easeTypeToUse));
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
         iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
-
         Invoke("ReadyToType", transitionTime);          //resets the waiting bool in the same length as the tween time
+    }
+    void ResizeRect (RectTransform toResize, RectTransform toMatch)
+    {
+        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
+        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
+        Invoke("ReadyToType", transitionTime);
     }
     void ReadyToType()
     {

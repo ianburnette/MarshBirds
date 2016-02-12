@@ -20,6 +20,16 @@ public class npcTriggerZone : MonoBehaviour {
         promptUI.SetActive(false);
     }
 	
+    public int GetSpeakerIndex(string speaker)
+    {
+        for (int i = 0; i< speakers.Length; i++)
+        {
+            if (speaker == speakers[i])
+                return i;
+        }
+        return 100;
+    }
+
 	// Update is called once per frame
 	void Update () {
 	    if (inTriggerZone && Input.GetButtonDown("Throw") && !inDialogue)
