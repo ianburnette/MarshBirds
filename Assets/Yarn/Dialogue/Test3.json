@@ -1,0 +1,12 @@
+[
+	{
+		"title": "Start",
+		"tags": "",
+		"body": "Seagull: Ugh, what do YOU want? \n-> To say hello!\n    Valentine: To say hello! Hello!\n    Seagull: Wow, you just went ahead and did it.\n    Seagull: Didn't even ask first.\n    -> Oh, I'm sorry I didn't ask.\n        Seagull: Yeah, well, I would've said no.\n    -> This middle option should not appear. <<if $option_available is 1>>\n        Seagull: It sure didn't.\n    -> Would you like a rock? <<if $option_available is 0>>\n        Seagull: Ooh, yes please, it's so\\n hard to find ROCKS IN THE WILDERNESS.\n    -> You just would have said no.\n        Seagull: Obviously. Have you met me?\n-> To knock your lights out.\n    Seagull: The feeling is mutual.\n    Valentine: You want to knock my lights out? \n    Seagull: No, being around you makes me want to knock my own lights out.\n-> To find the ocean. \n    Valentine: To find the ocean. \n    Seagull: Well, can't help you there.\n    <<if $didnt_work is 0>>\n        Valentine: You're literally a seagull.\n        Seagull: Yeah, and I have a bad sense of direction.\n        Valentine: And a bad attitude.\n        Seagull: Naturally.\n    <<endif>>\nValentine: Well, this has been informative.\nSeagull: Really?\nValentine: Oh, no. Not at all.",
+		"position": {
+			"x": 629,
+			"y": 222
+		},
+		"colorID": 6
+	}
+]

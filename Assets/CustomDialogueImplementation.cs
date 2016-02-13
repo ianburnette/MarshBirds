@@ -46,6 +46,7 @@ public class CustomDialogueImplementation : MonoBehaviour {
     public bool waitToType = false;                     //should the script wait to type
     public float transitionTime;                        //how long do movement animations take?
     public float typeTime = 0.5f;                       //how much time between letters
+    public float widthMargin;
     //window variables
     public string currentSpeaker;                       //who's currently taking
     public string mostRecentSpeaker;                    //last person to talk
@@ -62,6 +63,28 @@ public class CustomDialogueImplementation : MonoBehaviour {
     }
     #endregion
     #region//OPERATIONS
+    void Update()
+    {
+        if (dialogueObject.activeSelf)
+        {
+            for (int i = 0; i<dialogueRect.Length; i++)
+            {
+                if (dialogueRect[i].position != referenceDialogueRect[i].position)
+                    dialogueRect[i].position = Vector2.Lerp(dialogueRect[i].position, referenceDialogueRect[i].position, transitionTime);
+                if (dialogueRect[i].sizeDelta != referenceDialogueRect[i].sizeDelta)
+                    dialogueRect[i].sizeDelta = Vector2.Lerp(dialogueRect[i].sizeDelta, referenceDialogueRect[i].sizeDelta, transitionTime);
+            }
+        }else if (choiceObject.activeSelf)
+        {
+            for (int i = 0; i < choiceRect.Length; i++)
+            {
+                if (choiceRect[i].position != referenceChoiceRect[i].position)
+                    choiceRect[i].position = Vector2.Lerp(choiceRect[i].position, referenceChoiceRect[i].position, transitionTime);
+                if (choiceRect[i].sizeDelta != referenceChoiceRect[i].sizeDelta)
+                    choiceRect[i].sizeDelta = Vector2.Lerp(choiceRect[i].sizeDelta, new Vector2(referenceChoiceRect[i].sizeDelta.x + .2f, referenceChoiceRect[i].sizeDelta.y + .2f), transitionTime);
+            }
+        }
+    }
     public void RunDialogueFromNPC(string dialogueNameToRun, npcTriggerZone npcTrigger)
     {
         npcScript = npcTrigger;
@@ -179,6 +202,7 @@ public class CustomDialogueImplementation : MonoBehaviour {
             yield return null;
             if (choiceInputReady)
                 playerControl.GetChoiceInput();
+
            
         } while (chosenOption == -1);
         ToggleDialogue(false, choiceObject);           //turn off the choice object
@@ -187,7 +211,8 @@ public class CustomDialogueImplementation : MonoBehaviour {
     }
     public IEnumerator ChangeOption(int optionToChangeTo)
     {
-        print("changing option");
+        choiceBubbleText.text = "";
+       print("changing option");
         currentChoiceIndex = optionToChangeTo;
         choiceReferenceText.text = currentChoiceTexts[currentChoiceIndex];
         yield return new WaitForSeconds(.02f);
@@ -196,7 +221,10 @@ public class CustomDialogueImplementation : MonoBehaviour {
 //print("resizing " + choiceRect[i] + " to " + referenceChoiceRect[i] + " and i is " + i); 
             ResizeRect(choiceRect[i], referenceChoiceRect[i]);
         }
-        yield return new WaitForSeconds(transitionTime);
+        do
+        {
+            yield return null;
+        } while (waitToType);
         choiceBubbleText.text = choiceReferenceText.text;
         yield return null;
     }
@@ -230,17 +258,19 @@ public class CustomDialogueImplementation : MonoBehaviour {
         toResize.sizeDelta = Vector2.zero;
         waitToType = true;                  //stop the dialogue from typing
         //tween the first to match the second
-        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.x, "to", toMatch.position.x, "onupdate", "UpdateXpos", "time", transitionTime, "easetype", easeTypeToUse));
-        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.y, "to", toMatch.position.y, "onupdate", "UpdateYpos", "time", transitionTime, "easetype", easeTypeToUse));
-        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
-        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
+       // iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.x, "to", toMatch.position.x, "onupdate", "UpdateXpos", "time", transitionTime, "easetype", easeTypeToUse));
+      //  iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.y, "to", toMatch.position.y, "onupdate", "UpdateYpos", "time", transitionTime, "easetype", easeTypeToUse));
+      //  iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
+      //  iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
         Invoke("ReadyToType", transitionTime);          //resets the waiting bool in the same length as the tween time
     }
     void ResizeRect(RectTransform toResize, RectTransform toMatch)
     {
         waitToType = true;                  //stop the dialogue from typing
-        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
-        iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
+       // iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.x, "to", toMatch.position.x, "onupdate", "UpdateXpos", "time", transitionTime, "easetype", easeTypeToUse));
+       // iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.position.y, "to", toMatch.position.y, "onupdate", "UpdateYpos", "time", transitionTime, "easetype", easeTypeToUse));
+       // iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.x, "to", toMatch.sizeDelta.x, "onupdate", "UpdateWidth", "time", transitionTime, "easetype", easeTypeToUse));
+      //  iTween.ValueTo(toResize.gameObject, iTween.Hash("from", toResize.sizeDelta.y, "to", toMatch.sizeDelta.y, "onupdate", "UpdateHeight", "time", transitionTime, "easetype", easeTypeToUse));
         Invoke("ReadyToType", transitionTime);
     }
     void ReadyToType()
