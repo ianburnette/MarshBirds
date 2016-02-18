@@ -72,7 +72,7 @@ public class CustomDialogueImplementation : MonoBehaviour {
                 if (dialogueRect[i].position != referenceDialogueRect[i].position)
                     dialogueRect[i].position = Vector2.Lerp(dialogueRect[i].position, referenceDialogueRect[i].position, transitionTime);
                 if (dialogueRect[i].sizeDelta != referenceDialogueRect[i].sizeDelta)
-                    dialogueRect[i].sizeDelta = Vector2.Lerp(dialogueRect[i].sizeDelta, referenceDialogueRect[i].sizeDelta, transitionTime);
+                    dialogueRect[i].sizeDelta = Vector2.Lerp(dialogueRect[i].sizeDelta, referenceDialogueRect[i].sizeDelta * widthMargin, transitionTime);
             }
         }else if (choiceObject.activeSelf)
         {
@@ -80,8 +80,8 @@ public class CustomDialogueImplementation : MonoBehaviour {
             {
                 if (choiceRect[i].position != referenceChoiceRect[i].position)
                     choiceRect[i].position = Vector2.Lerp(choiceRect[i].position, referenceChoiceRect[i].position, transitionTime);
-                if (choiceRect[i].sizeDelta != referenceChoiceRect[i].sizeDelta)
-                    choiceRect[i].sizeDelta = Vector2.Lerp(choiceRect[i].sizeDelta, new Vector2(referenceChoiceRect[i].sizeDelta.x + .2f, referenceChoiceRect[i].sizeDelta.y + .2f), transitionTime);
+                //if (choiceRect[i].sizeDelta != referenceChoiceRect[i].sizeDelta)
+                choiceRect[i].sizeDelta = Vector2.Lerp(choiceRect[i].sizeDelta, referenceChoiceRect[i].sizeDelta * widthMargin, transitionTime);//new Vector2(referenceChoiceRect[i].sizeDelta.x + widthMargin, referenceChoiceRect[i].sizeDelta.y + widthMargin), transitionTime);
             }
         }
     }

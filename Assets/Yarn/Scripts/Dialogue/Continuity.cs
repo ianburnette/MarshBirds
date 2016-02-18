@@ -22,6 +22,20 @@ public class Continuity : MonoBehaviour
 		}
 	}
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            print("saved");
+            Save();
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            print("loaded");
+            Load();
+        }
+    }
+
 	public void Reset()
 	{
 		vars.Clear();
