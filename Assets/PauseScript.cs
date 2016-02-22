@@ -5,18 +5,18 @@ public class PauseScript : MonoBehaviour {
 
     public bool canPause, isPaused;
     public GameObject pauseMenu;
+    public PlayerDisabler disabler;
 
 	void Update () {
 	    if (Input.GetButtonDown("Pause") && canPause)
             Pause();
 	}
 
-    void Pause()
+    public void Pause()
     {
         Time.timeScale = 1f - Time.timeScale;
         isPaused = !isPaused;
-        print("pause menu is " + pauseMenu.activeSelf);
         pauseMenu.SetActive(isPaused);
-        print("after, pause menu is " + pauseMenu.activeSelf);
+        disabler.TogglePlayerScripts(!isPaused);
     }
 }
