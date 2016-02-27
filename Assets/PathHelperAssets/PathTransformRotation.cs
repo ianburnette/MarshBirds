@@ -88,14 +88,19 @@ public class PathTransformRotation : MonoBehaviour {
             //Determine the percentage along the path that the transform should look at
             float hInput;
             if (ladder)
+            {
                 hInput = Input.GetAxis("Vertical");
-            else
+                calculatedLookPercentage = foundPercentage + (lookForwardAmt / 100f) * -inputPercentageDivisor;
+            }
+            else {
                 hInput = Input.GetAxis("Horizontal");
+                if (hInput > 0)
+                    calculatedLookPercentage = foundPercentage - (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
+                else if (hInput < 0)
+                    calculatedLookPercentage = foundPercentage + (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
+            }
 
-            if (hInput > 0)
-                calculatedLookPercentage = foundPercentage - (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
-            else if (hInput < 0)
-                calculatedLookPercentage = foundPercentage + (lookForwardAmt / 100f) + hInput * -inputPercentageDivisor;
+
             normalizedLookPercentage = 0f;
 
             //Normalize this value if the percentage is outside 0-100 range
@@ -117,7 +122,7 @@ public class PathTransformRotation : MonoBehaviour {
             if (!ladder) 
                 referenceTransform.transform.LookAt(iTween.PointOnPath(iTweenPath.GetPath(pathMovementScript.pathName),(normalizedLookPercentage)));
             else
-                referenceTransform.transform.LookAt(iTween.PointOnPath(iTweenPath.GetPath(ladderPath.pathName), (normalizedLookPercentage)));
+                referenceTransform.transform.LookAt(iTween.PointOnPath(iTweenPath.GetPath(ladderPath.pathName), (normalizedLookPercentage)), Vector3.up);
         }
     }
 
@@ -126,8 +131,12 @@ public class PathTransformRotation : MonoBehaviour {
         if (smoothLookRotation) //Smoothe the transform's rotation to match the reference transform's rotation
         {
             //toSet.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.position - referenceTransform.position), smoothSpeed * Time.deltaTime);
-                //Quaternion.Lerp(transform.rotation, Quaternion.Euler(Vector3.Project(referenceTransform.rotation.eulerAngles,transform.rotation.eulerAngles)), smoothSpeed * Time.deltaTime);
-            toSet.rotation = Quaternion.Lerp(transform.rotation, referenceTransform.rotation, smoothSpeed * Time.deltaTime);
+            //Quaternion.Lerp(transform.rotation, Quaternion.Euler(Vector3.Project(referenceTransform.rotation.eulerAngles,transform.rotation.eulerAngles)), smoothSpeed * Time.deltaTime);
+            //toSet.rotation = Quaternion.Lerp(transform.rotation, referenceTransform.rotation, smoothSpeed * Time.deltaTime);
+            Quaternion currentRotation = transform.rotation;
+            Quaternion goalRotation = toSet.rotation;
+            toSet.eulerAngles = new Vector3(toSet.eulerAngles.x, 180, toSet.eulerAngles.z);
+            toSet.rotation = Quaternion.Lerp(currentRotation, goalRotation, smoothSpeed * Time.deltaTime);
         }
         else //Set the transform's rotation to equal the reference transform's rotaton
         {

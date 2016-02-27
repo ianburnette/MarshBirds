@@ -139,10 +139,13 @@ public class PlayerMove : MonoBehaviour
              //   rawDirection = movementReferenceForward.position - new Vector3(transform.position.x, movementReferenceBase.position.y, transform.position.z);
             }
             rawDirection.Normalize();
-            publicMovementVector = rawDirection;
+           // publicMovementVector = rawDirection;
             direction = (rawDirection) * h;
             if (direction != Vector3.zero)
+            {
                 publicMovementVector = direction;
+                print("setting public vector to " + direction + " because input isn't 0");
+            }
             Debug.DrawRay(transform.position, rawDirection * 2f, Color.green);
         }
             //direction = Vector3.right * h;

@@ -36,17 +36,24 @@ public class PlayerInventory : MonoBehaviour {
 
     public void RemoveItem(GameObject itemToRemove)
     {
-       // print("Removing item");
+        print("Removing item " + itemToRemove.name);
         foreach (GameObject item in inventoryItems)
         {
-            if (item == itemToRemove)
+            if (item != null)
             {
-                item.SetActive(true);
-                throwScript.PickupFromInventory(item.GetComponent<Collider>());
-                inventoryItems.Remove(item);
-                itemsHeld--;
+                print("comparing " + itemToRemove + " to " + item.name);
+                if (item.name == itemToRemove.name)
+                {
+                    item.SetActive(true);
+                    throwScript.PickupFromInventory(item.GetComponent<Collider>());
+                    //inventoryItems.Remove(item);
+                    //figure out how to use List predicates to find list item index
+                    int indexToRemove = inventoryItems.IndexOf(itemToRemove);
+                    inventoryItems[indexToRemove] = null;
+                    itemsHeld--;
+                    break;
+                }
             }
-            break;
         }
     }
 }

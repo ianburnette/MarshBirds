@@ -11,6 +11,7 @@ public class InventoryMainControl : MonoBehaviour {
     public PlayerInventory inventoryScript;
     public GameObject[] itemPanels;
     public Button[] itemPanelButtons;
+    public ItemInventoryScript[] itemScripts;
     public Button closeButton;
     public GameObject removeItemObject, descriptionPanel;
     public Button lastSelectedButton;
@@ -22,23 +23,20 @@ public class InventoryMainControl : MonoBehaviour {
     {
         if (itemPanelButtons.Length == 0)
         {
-            itemPanelButtons = new Button[itemPanels.Length];
-            for (int i = 0; i < itemPanelButtons.Length; i++)
-            {
-                itemPanelButtons[i] = itemPanels[i].GetComponent<Button>();
-            }
+            itemPanelButtons = new Button[itemPanels.Length];                   //create an array to hold all held item buttons based on the panel array
+            for (int i = 0; i < itemPanelButtons.Length; i++)                   //for each of these buttons
+                itemPanelButtons[i] = itemPanels[i].GetComponent<Button>();     //add it to the array of buttons we just created
         }
     }
 
 	void OnEnable() {
-        CalculateHeldInventory();
+        CalculateHeldInventory();                                               //update to see if we have any new items
 	}
     void OnDisable()
     {
-        ResetMenu();
+        ResetMenu();                                                            //return menu to its default state
     }
-
-    void CalculateHeldInventory()
+    void CalculateHeldInventory()                                               //check each item in inventory against panels to display, and hide/show them appropriately
     {
         for (int i = 0; i<inventoryScript.inventoryItems.Count; i++)
         {
@@ -54,12 +52,13 @@ public class InventoryMainControl : MonoBehaviour {
     }
 
 	void Update () {
-        if (Input.GetButtonDown("Cancel"))
+        if (Input.GetButtonDown("Cancel"))                                      //handle going back in the menu
         {
             ResetMenu();
             SetCurrentButton();
+            //also make it exit the inventory screen? try this to see how it feels
         }
-        if (itemSelected && Input.GetButtonDown("Grab"))
+        if (itemSelected && Input.GetButtonDown("Grab"))                        //take the item out of your inventory and put it in your hand
         {
             inventoryScript.RemoveItem(inventoryScript.inventoryItems[selectedItemIndex]);
             CloseMenu();
@@ -68,11 +67,14 @@ public class InventoryMainControl : MonoBehaviour {
 
     void ResetMenu()
     {
-        Deselect(false);
+        
         itemSelected = false;
         SetButtonEnableState(closeButton, true);
         foreach (Button button in itemPanelButtons)
             SetButtonEnableState(button, true);
+
+        if (Deselect!=null)
+            Deselect(false);
     }
 
     public void CloseMenu()
@@ -85,6 +87,7 @@ public class InventoryMainControl : MonoBehaviour {
     {
         lastSelectedButton = itemPanelButtons[itemIndex];
         SetButtonEnableState(closeButton, false);
+        itemScripts[itemIndex].Select(true);
         foreach (Button button in itemPanelButtons)
             SetButtonEnableState(button, false);
         itemSelected = true;

@@ -16,11 +16,13 @@ public class ItemInventoryScript : MonoBehaviour {
     {
         InventoryMainControl.Deselect += Select;
         GetComponent<Button>().onClick.AddListener(() => Select(true));
+        //print("subscribing to deselect");
             
     }
     void OnDisable()
     {
         InventoryMainControl.Deselect -= Select;
+        //print("unsubscribing to deselect");
     }
 
     void Update()

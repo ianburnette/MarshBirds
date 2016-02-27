@@ -86,6 +86,7 @@ public class MoveOnPath : MonoBehaviour
         Debug.DrawRay(transform.position, correction, Color.cyan);
         calcVel += -correction * adjustmentSpeed * Time.deltaTime;
         Debug.DrawRay(transform.position, calcVel, Color.magenta);
+        
         return calcVel;
     }
 

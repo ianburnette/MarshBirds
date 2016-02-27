@@ -153,6 +153,7 @@ public class Throwing : MonoBehaviour
 
     public void PickupFromInventory(Collider item)
     {
+        print("taking out " + item.name);
         if (heldObj == null && timeOfThrow + 0.2f < Time.time)
             LiftPickup(item);
         else if (heldObj != null)
@@ -272,9 +273,11 @@ public class Throwing : MonoBehaviour
         r.interpolation = objectDefInterpolation;
 		r.mass /= weightChange;
         Vector3 forceToThrow = new Vector3(playerMove.publicMovementVector.x * throwForce.magnitude, throwForce.y, playerMove.publicMovementVector.z * throwForce.magnitude);//Vector3.Project(playerMove.publicMovementVector, throwForce);//Vector3.Project(throwForce, playerMove.publicMovementVector);
-		r.AddForce (forceToThrow, ForceMode.VelocityChange);
+        print ("multiplying " + (playerMove.publicMovementVector.x) + " by " + (throwForce.magnitude) + " gets " + forceToThrow.x);
+        print("multiplying " + (playerMove.publicMovementVector.x) + "zby " + (throwForce.magnitude) + " gets " + forceToThrow.z);
+        r.AddForce (forceToThrow, ForceMode.VelocityChange);
         r.AddTorque(new Vector3(Random.value, Random.value, Random.value) * rotationAmount);
-        Debug.DrawRay(r.transform.position, forceToThrow);
+        Debug.DrawRay(r.transform.position, forceToThrow, Color.cyan);
         //EditorApplication.isPaused = true;
 		heldObj = null;
 		timeOfThrow = Time.time;
