@@ -29,6 +29,8 @@ public class Throwing : MonoBehaviour
     public float currentPathValue;
     public PathNodeJumper pathScript;
 
+    public bool canGrab;
+
     public float rotationAmount;
 
     public GameObject heldObj;
@@ -75,11 +77,12 @@ public class Throwing : MonoBehaviour
 	//throwing/dropping
 	void Update()
 	{
+      
         currentPathValue = pathScript.objectPathPosition;
-        if (heldObj && !UIPrompt.activeSelf)
+    /*    if (heldObj && !UIPrompt.activeSelf)
             UIPrompt.SetActive(true);
         else if (!heldObj && UIPrompt.activeSelf)
-            UIPrompt.SetActive(false);
+            UIPrompt.SetActive(false);*/
 		//when we press grab button, throw object if we're holding one
 		if (Input.GetButtonDown ("Grab") && heldObj && Time.time > timeOfPickup + 0.1f)
 		{
@@ -139,6 +142,8 @@ public class Throwing : MonoBehaviour
 	//pickup/grab
 	void OnTriggerStay(Collider other)
 	{
+        if (other.transform.tag == "Pickup")
+            canGrab = true;
 		//if grab is pressed and an object is inside the players "grabBox" trigger
 		if(Input.GetButton("Grab"))
 		{
@@ -150,6 +155,12 @@ public class Throwing : MonoBehaviour
 				GrabPushable(other);
 		}
 	}
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.transform.tag == "Pickup")
+            canGrab = false;
+    }
 
     public void PickupFromInventory(Collider item)
     {
